@@ -5,18 +5,32 @@ import org.apache.camel.Processor;
 import org.apache.camel.Producer;
 import org.apache.camel.impl.DefaultEndpoint;
 
+import java.util.Optional;
+
 class CamelCoapEndpoint extends DefaultEndpoint {
 
     private final int port;
+    private final Optional<Long> timeout;
 
-    public CamelCoapEndpoint(String uri, CoapComponent coapComponent, int port) {
+    public CamelCoapEndpoint(String uri, CoapComponent coapComponent, int port, long timeout) {
         super(uri, coapComponent);
         this.port = port;
+        this.timeout = Optional.of(timeout);
+    }
+
+    public CamelCoapEndpoint(String uri, CoapComponent coapComponent, int listenPort) {
+        super(uri, coapComponent);
+        this.port = listenPort;
+        this.timeout = Optional.empty();
     }
 
     @Override
     public Producer createProducer() throws Exception {
-        return new CoapProducer(this);
+        if (timeout.isPresent()) {
+            return new CoapProducer(this, timeout.get());
+        } else {
+            return new CoapProducer(this);
+        }
     }
 
     @Override
